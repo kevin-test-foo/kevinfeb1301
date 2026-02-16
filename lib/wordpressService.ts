@@ -224,16 +224,16 @@ export async function fetchWordPressPost(slug: string): Promise<BlogPost | null>
       throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
     }
 
-    // Extract and apply surrogate keys
-    const surrogateKeys = extractSurrogateKeys(response.headers);
-    surrogateKeys.forEach(key => cacheTag(key));
-
     const wpPosts: WPPost[] = await response.json();
 
     if (wpPosts.length === 0) {
       console.log(`[WordPress] Post not found: ${slug}`);
       return null;
     }
+
+    // Generate and apply surrogate keys for this post
+    const surrogateKeys = generateSurrogateKeys(wpPosts[0]);
+    surrogateKeys.forEach(key => cacheTag(key));
 
     console.log(`[WordPress] Successfully fetched post: ${wpPosts[0].id}`);
 
