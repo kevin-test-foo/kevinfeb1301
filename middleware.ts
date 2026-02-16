@@ -2,13 +2,16 @@
 // Captures cache tags from cacheTag() calls and sets Surrogate-Key headers
 // for CDN cache invalidation (Pantheon Advanced Page Cache integration)
 //
+// This custom middleware bridges BOTH caching systems:
+// - RequestContext (legacy cache handler for ISR/route handlers)
+// - CacheTagContext ('use cache' directive for WordPress blog pages)
+//
 // See: lib/wordpressService.ts for cacheTag() usage
-// See: @pantheon-systems/nextjs-cache-handler/middleware for implementation
 
-import { createSurrogateKeyMiddleware } from '@pantheon-systems/nextjs-cache-handler/middleware';
+import { createUnifiedSurrogateKeyMiddleware } from './lib/surrogate-key-middleware';
 
-// Create middleware with debug logging enabled
-export const middleware = createSurrogateKeyMiddleware({
+// Create unified middleware with debug logging enabled
+export const middleware = createUnifiedSurrogateKeyMiddleware({
   debug: true,
   fallbackKey: 'nextjs-app',
 });

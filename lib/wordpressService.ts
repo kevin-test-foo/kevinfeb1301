@@ -233,6 +233,7 @@ export async function fetchWordPressPost(slug: string): Promise<BlogPost | null>
 
     // Generate and apply surrogate keys for this post
     const surrogateKeys = generateSurrogateKeys(wpPosts[0]);
+    console.log(`[WordPress] Applying ${surrogateKeys.length} cache tags for post ${wpPosts[0].id}: ${surrogateKeys.join(', ')}`);
     surrogateKeys.forEach(key => cacheTag(key));
 
     console.log(`[WordPress] Successfully fetched post: ${wpPosts[0].id}`);
