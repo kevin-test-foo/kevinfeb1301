@@ -182,11 +182,14 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
       throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
     }
 
-    // Extract and apply surrogate keys
-    const surrogateKeys = extractSurrogateKeys(response.headers);
-    surrogateKeys.forEach(key => cacheTag(key));
-
+    // Generate and apply surrogate keys from all posts
     const wpPosts: WPPost[] = await response.json();
+
+    const allKeys = wpPosts.flatMap(post => generateSurrogateKeys(post));
+    const uniqueKeys = [...new Set(allKeys)];
+
+    console.log(`[WordPress] Applying ${uniqueKeys.length} unique cache tags for ${wpPosts.length} posts`);
+    uniqueKeys.forEach(key => cacheTag(key));
 
     console.log(`[WordPress] Successfully fetched ${wpPosts.length} posts`);
 
