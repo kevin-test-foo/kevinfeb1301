@@ -1,67 +1,30 @@
-// Middleware for:
-// 1. waitUntil() background task tests (via event.waitUntil())
-// 2. Pass-through for other routes (Surrogate-Key headers set by withSurrogateKey wrapper)
+// Middleware for automatic Surrogate-Key header propagation
+// Captures cache tags from cacheTag() calls and sets Surrogate-Key headers
+// for CDN cache invalidation (Pantheon Advanced Page Cache integration)
 //
-// See: /api/posts/with-tags/route.ts for example usage of withSurrogateKey
-//
-// NOTE: Middleware runs in Edge runtime, so we cannot use @google-cloud/storage directly.
-// Instead, we call an internal API endpoint that runs in Node.js runtime.
+// See: lib/wordpressService.ts for cacheTag() usage
+// See: @pantheon-systems/nextjs-cache-handler/middleware for implementation
 
-import { NextResponse } from 'next/server';
-import type { NextRequest, NextFetchEvent } from 'next/server';
+import { createSurrogateKeyMiddleware } from '@pantheon-systems/nextjs-cache-handler/middleware';
 
-export function middleware(request: NextRequest, event: NextFetchEvent) {
-  // Handle waitUntil() test trigger
-  if (request.nextUrl.pathname === '/api/background-tasks/waituntil-trigger') {
-    const taskId = request.nextUrl.searchParams.get('taskId');
+// Create middleware with debug logging enabled
+export const middleware = createSurrogateKeyMiddleware({
+  debug: true,
+  fallbackKey: 'nextjs-app',
+});
 
-    if (taskId) {
-      console.log(`[Middleware] waitUntil() triggered: taskId=${taskId}`);
-
-      // Use event.waitUntil() to keep the request alive for background work
-      // Call internal API endpoint to write to GCS (runs in Node.js runtime)
-      event.waitUntil(
-        (async () => {
-          try {
-            // Build the internal API URL
-            const writeUrl = new URL('/api/background-tasks/waituntil-write', request.url);
-            writeUrl.searchParams.set('taskId', taskId);
-
-            const response = await fetch(writeUrl.toString(), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                taskId,
-                type: 'waitUntil',
-                completed: true,
-                timestamp: Date.now(),
-                source: 'middleware',
-              }),
-            });
-
-            if (!response.ok) {
-              throw new Error(`Write API returned ${response.status}`);
-            }
-
-            console.log(`[Middleware] waitUntil() completed: taskId=${taskId}`);
-          } catch (error) {
-            console.error(`[Middleware] waitUntil() failed: taskId=${taskId}`, error);
-          }
-        })()
-      );
-    }
-  }
-
-  // Continue to the route handler
-  return NextResponse.next();
-}
-
+// Apply middleware to blog pages and other cached routes
+// Excludes API routes, static assets, and Next.js internals
 export const config = {
-  // Only run middleware for background-tasks waitUntil endpoint
-  // All other routes should bypass middleware entirely to avoid interfering with cache headers
   matcher: [
-    '/api/background-tasks/waituntil-trigger',
+    // Blog pages - primary use case for surrogate keys
+    '/blogs/:path*',
+
+    // Include other pages that use caching
+    '/',
+    '/about',
+
+    // Exclude API routes, static files, and Next.js internals
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
