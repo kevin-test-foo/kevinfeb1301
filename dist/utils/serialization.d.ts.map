@@ -1,0 +1,1 @@
+{"version":3,"file":"serialization.d.ts","sourceRoot":"","sources":["../../src/utils/serialization.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EACV,SAAS,EACT,mBAAmB,EAIpB,MAAM,aAAa,CAAC;AAErB;;;GAGG;AACH,wBAAgB,mBAAmB,CAAC,IAAI,EAAE,SAAS,GAAG,mBAAmB,CAwBxE;AAED;;;GAGG;AACH,wBAAgB,sBAAsB,CAAC,IAAI,EAAE,mBAAmB,GAAG,SAAS,CAwB3E"}

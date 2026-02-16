@@ -1,27 +1,72 @@
 {
-  "name": "next.js",
+  "name": "@pantheon-systems/nextjs-cache-handler",
   "version": "0.1.0",
-  "private": true,
+  "description": "Custom cache handler for Next.js with support for Google Cloud Storage and file-based caching",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./use-cache": {
+      "import": "./dist/use-cache/index.js",
+      "types": "./dist/use-cache/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
+    },
+    "./middleware": {
+      "import": "./dist/middleware/index.js",
+      "types": "./dist/middleware/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "next.js",
+    "cache",
+    "cache-handler",
+    "gcs",
+    "google-cloud-storage",
+    "pantheon"
+  ],
+  "author": "Pantheon Systems",
+  "license": "MIT",
+  "peerDependencies": {
+    "next": ">=14.0.0"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "^15.5.7"
+    "@google-cloud/storage": "^7.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "^15.5.7",
-    "@eslint/eslintrc": "^3"
+    "@vitest/coverage-v8": "^4.0.18",
+    "next": "^16.1.6",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pantheon-systems/nextjs-cache-handler"
+  },
+  "homepage": "https://github.com/pantheon-systems/nextjs-cache-handler#readme",
+  "bugs": {
+    "url": "https://github.com/pantheon-systems/nextjs-cache-handler/issues"
   }
 }
