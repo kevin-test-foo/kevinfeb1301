@@ -80,23 +80,37 @@ function sanitizeHTML(html: string): string {
 }
 
 /**
- * Extract surrogate keys from WordPress response headers
+ * Generate surrogate keys from WordPress post data
  */
-function extractSurrogateKeys(headers: Headers): string[] {
-  const surrogateKey = headers.get('Surrogate-Key') || headers.get('surrogate-key');
+function generateSurrogateKeys(wpPost: WPPost): string[] {
+  const keys: string[] = [];
 
-  if (!surrogateKey) {
-    console.warn('[WordPress] No Surrogate-Key header found in response');
-    return ['wordpress-posts']; // Fallback tag
+  // Post-specific key
+  keys.push(`post-${wpPost.id}`);
+
+  // Post list key (for invalidating archives)
+  keys.push('post-list');
+
+  // Category keys
+  if (wpPost.categories && Array.isArray(wpPost.categories)) {
+    wpPost.categories.forEach(categoryId => {
+      keys.push(`term-${categoryId}`);
+    });
   }
 
-  // Surrogate keys are space-separated
-  const keys = surrogateKey.split(' ').filter(key => key.trim().length > 0);
+  // Tag keys
+  if (wpPost.tags && Array.isArray(wpPost.tags)) {
+    wpPost.tags.forEach(tagId => {
+      keys.push(`term-${tagId}`);
+    });
+  }
 
-  console.log(`[WordPress] Extracted surrogate keys: ${keys.join(', ')}`);
+  // Deduplicate and return
+  const uniqueKeys = [...new Set(keys)];
 
-  // Always include fallback tag
-  return [...new Set([...keys, 'wordpress-posts'])];
+  console.log(`[WordPress] Generated surrogate keys for post ${wpPost.id}:`, uniqueKeys.join(', '));
+
+  return uniqueKeys;
 }
 
 /**
