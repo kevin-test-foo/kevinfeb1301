@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getBlogPostsWithMetadata } from '../../lib/blogService';
+import { fetchWordPressPostsWithMetadata } from '../../lib/wordpressService';
 
 export interface BlogPost {
   id: number;
@@ -19,11 +19,8 @@ export interface BlogPost {
   tags: string[];
 }
 
-// Next.js 16: Caching is handled in blogService with 'use cache'
-// Replaced legacy: export const revalidate = 300;
-
 export default async function BlogsPage() {
-  const { posts: blogs, cachedAt } = await getBlogPostsWithMetadata();
+  const { posts: blogs, cachedAt } = await fetchWordPressPostsWithMetadata();
 
   // Next.js 16: Use cached timestamp from the cache component
   const generatedAt = new Date(cachedAt);
@@ -36,7 +33,7 @@ export default async function BlogsPage() {
             Blog
           </h1>
           <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Thoughts, tutorials, and insights about web development
+            Thoughts, tutorials, and insights from WordPress
           </p>
 
           {/* ISR indicator - shows when the page was generated */}
@@ -62,68 +59,74 @@ export default async function BlogsPage() {
               </time>
             </p>
             <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-              Revalidates every 5 minutes (300s). Refresh the page after this time to see a new timestamp.
+              Webhook-driven revalidation. Content updates immediately when WordPress publishes.
             </p>
           </div>
         </header>
 
-        <div className="grid gap-8">
-          {blogs.map((blog) => (
-            <article
-              key={blog.id}
-              className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-6 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
-                  <span>{blog.author.name}</span>
-                  <span>•</span>
-                  <time dateTime={blog.publishedAt}>
-                    {new Date(blog.publishedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </time>
-                  <span>•</span>
-                  <span>{blog.readingTime} min read</span>
-                </div>
+        {blogs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-lg text-zinc-500 dark:text-zinc-400">No posts yet. Check back soon!</p>
+          </div>
+        ) : (
+          <div className="grid gap-8">
+            {blogs.map((blog) => (
+              <article
+                key={blog.id}
+                className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-6 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                    <span>{blog.author.name}</span>
+                    <span>•</span>
+                    <time dateTime={blog.publishedAt}>
+                      {new Date(blog.publishedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </time>
+                    <span>•</span>
+                    <span>{blog.readingTime} min read</span>
+                  </div>
 
-                <div>
-                  <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                  <div>
+                    <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                      <Link
+                        href={`/blogs/${blog.slug}`}
+                        className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      >
+                        {blog.title}
+                      </Link>
+                    </h2>
+                    <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                      {blog.excerpt}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap gap-2">
+                      {blog.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                     <Link
                       href={`/blogs/${blog.slug}`}
-                      className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
                     >
-                      {blog.title}
+                      Read more →
                     </Link>
-                  </h2>
-                  <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                    {blog.excerpt}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
-                    {blog.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md"
-                      >
-                        {tag}
-                      </span>
-                    ))}
                   </div>
-                  <Link
-                    href={`/blogs/${blog.slug}`}
-                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-colors"
-                  >
-                    Read more →
-                  </Link>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
           <Link
