@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import DOMPurify from 'isomorphic-dompurify';
 import type { BlogPost } from '../app/blogs/page';
 
@@ -143,4 +144,119 @@ function transformWordPressPost(wpPost: WPPost): BlogPost {
     readingTime: calculateReadingTime(wpPost.content.rendered),
     tags: tags.length > 0 ? tags : categories, // Use categories as tags if no tags
   };
+}
+
+/**
+ * Fetch all published posts from WordPress
+ */
+export async function fetchWordPressPosts(): Promise<BlogPost[]> {
+  'use cache';
+  cacheLife('blog'); // Uses custom profile: 60s stale, 300s revalidate, 3600s expire
+
+  try {
+    console.log('[WordPress] Fetching all posts...');
+
+    const url = `${WORDPRESS_API_URL}/posts?_embed&per_page=100&status=publish&orderby=date&order=desc`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+    }
+
+    // Extract and apply surrogate keys
+    const surrogateKeys = extractSurrogateKeys(response.headers);
+    surrogateKeys.forEach(key => cacheTag(key));
+
+    const wpPosts: WPPost[] = await response.json();
+
+    console.log(`[WordPress] Successfully fetched ${wpPosts.length} posts`);
+
+    return wpPosts.map(transformWordPressPost);
+
+  } catch (error) {
+    console.error('[WordPress] Error fetching posts:', error);
+    // Return empty array - Next.js will serve stale cache if available
+    return [];
+  }
+}
+
+/**
+ * Fetch single post by slug from WordPress
+ */
+export async function fetchWordPressPost(slug: string): Promise<BlogPost | null> {
+  'use cache';
+  cacheLife('blog');
+
+  try {
+    console.log(`[WordPress] Fetching post: ${slug}`);
+
+    const url = `${WORDPRESS_API_URL}/posts?_embed&slug=${encodeURIComponent(slug)}&status=publish`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
+    }
+
+    // Extract and apply surrogate keys
+    const surrogateKeys = extractSurrogateKeys(response.headers);
+    surrogateKeys.forEach(key => cacheTag(key));
+
+    const wpPosts: WPPost[] = await response.json();
+
+    if (wpPosts.length === 0) {
+      console.log(`[WordPress] Post not found: ${slug}`);
+      return null;
+    }
+
+    console.log(`[WordPress] Successfully fetched post: ${wpPosts[0].id}`);
+
+    return transformWordPressPost(wpPosts[0]);
+
+  } catch (error) {
+    console.error(`[WordPress] Error fetching post ${slug}:`, error);
+    // Return null - Next.js will serve stale cache if available
+    return null;
+  }
+}
+
+/**
+ * Fetch all posts with cache metadata (for displaying cache timestamp)
+ */
+export async function fetchWordPressPostsWithMetadata(): Promise<{
+  posts: BlogPost[];
+  cachedAt: string;
+}> {
+  'use cache';
+  cacheLife('blog');
+
+  const cachedAt = new Date().toISOString();
+  const posts = await fetchWordPressPosts();
+
+  return { posts, cachedAt };
+}
+
+/**
+ * Fetch single post with cache metadata
+ */
+export async function fetchWordPressPostWithMetadata(slug: string): Promise<{
+  post: BlogPost | null;
+  cachedAt: string;
+}> {
+  'use cache';
+  cacheLife('blog');
+
+  const cachedAt = new Date().toISOString();
+  const post = await fetchWordPressPost(slug);
+
+  return { post, cachedAt };
 }
