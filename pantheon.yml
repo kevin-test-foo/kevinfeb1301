@@ -1,0 +1,18 @@
+api_version: 1
+
+# Build the Next.js app during deployment
+build_providers:
+  - type: nodejs
+    version: '20'
+    install_dep: npm ci
+    run_scripts: npm run build
+
+# Web server configuration
+web_config:
+  framework: custom
+  start_command: npm run start
+  port: 3000
+
+# Required environment variables:
+# - CACHE_BUCKET: GCS bucket for cache storage (required for production)
+# - OUTBOUND_PROXY_ENDPOINT: Edge cache proxy endpoint (optional)
