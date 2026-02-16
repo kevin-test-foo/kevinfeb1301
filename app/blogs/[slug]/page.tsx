@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getBlogPost, getBlogPosts, getBlogPostWithMetadata } from '../../../lib/blogService';
+import { fetchWordPressPost, fetchWordPressPostWithMetadata, fetchWordPressPosts } from '../../../lib/wordpressService';
 import type { BlogPost } from '../page';
 
 interface BlogPostPageProps {
@@ -10,8 +10,8 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  // Generate static params using cache service
-  const blogs = await getBlogPosts();
+  // Generate static params using WordPress service
+  const blogs = await fetchWordPressPosts();
   return blogs.map((blog) => ({
     slug: blog.slug,
   }));
@@ -19,7 +19,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const {slug} = await params
-  const blog = await getBlogPost(slug);
+  const blog = await fetchWordPressPost(slug);
 
   if (!blog) {
     return {
@@ -33,12 +33,9 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   };
 }
 
-// Next.js 16: Caching is handled in blogService with 'use cache'
-// Replaced legacy: export const revalidate = 600;
-
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const {slug} = await params
-  const { post: blog, cachedAt } = await getBlogPostWithMetadata(slug);
+  const { post: blog, cachedAt } = await fetchWordPressPostWithMetadata(slug);
 
   if (!blog) {
     notFound();
@@ -69,7 +66,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 hour12: true,
               })}
             </time>
-            <span className="text-amber-500 dark:text-amber-500 ml-1">(10min)</span>
+            <span className="text-amber-500 dark:text-amber-500 ml-1">(webhook)</span>
           </div>
         </nav>
 
@@ -110,41 +107,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </p>
             </header>
 
-            <div className="prose prose-zinc dark:prose-invert max-w-none">
-              {/* Render blog content with proper formatting */}
-              {blog.body.split('\n').map((paragraph, index) => {
-                if (paragraph.trim() === '') return <br key={index} />;
-
-                // Handle headers (simple markdown-like parsing)
-                if (paragraph.startsWith('# ')) {
-                  return (
-                    <h1 key={index} className="text-2xl font-bold mt-8 mb-4 text-zinc-900 dark:text-zinc-100">
-                      {paragraph.substring(2)}
-                    </h1>
-                  );
-                }
-                if (paragraph.startsWith('## ')) {
-                  return (
-                    <h2 key={index} className="text-xl font-semibold mt-6 mb-3 text-zinc-900 dark:text-zinc-100">
-                      {paragraph.substring(3)}
-                    </h2>
-                  );
-                }
-                if (paragraph.startsWith('- ')) {
-                  return (
-                    <li key={index} className="text-zinc-700 dark:text-zinc-300 mb-1">
-                      {paragraph.substring(2)}
-                    </li>
-                  );
-                }
-
-                return (
-                  <p key={index} className="text-zinc-700 dark:text-zinc-300 leading-relaxed mb-4">
-                    {paragraph}
-                  </p>
-                );
-              })}
-            </div>
+            {/* Content is sanitized in wordpressService.ts using DOMPurify */}
+            <div
+              className="prose prose-zinc dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: blog.body }}
+            />
           </div>
 
           <footer className="border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-6">
