@@ -151,6 +151,60 @@ The application can fetch data from:
 
 For E2E testing, **real API mode is required** because mock mode bypasses `fetch()` calls and doesn't test the cache handler.
 
+## WordPress Integration
+
+This Next.js app uses WordPress as a headless CMS with Pantheon's surrogate key system for cache invalidation.
+
+### Environment Variables
+
+Copy `.env.local.example` to `.env.local` and configure:
+
+- `WORDPRESS_API_URL`: Your WordPress REST API endpoint (required)
+  - Example: `https://dev-devx6473wp.pantheonsite.io/wp-json/wp/v2`
+- `WEBHOOK_SECRET`: Secret token for webhook authentication (required)
+  - Generate with: `openssl rand -base64 32`
+
+### WordPress Setup
+
+1. Install required plugins:
+   - Pantheon Advanced Page Cache (for surrogate keys)
+   - WP Webhooks or custom webhook solution
+
+2. Configure permalinks:
+   - Go to Settings → Permalinks
+   - Set to "Post name" structure
+
+3. Configure webhook:
+   - Trigger on: `save_post`, `publish_post`
+   - URL: `https://your-nextjs-app.com/api/revalidate`
+   - Method: POST
+   - Headers: `X-Webhook-Secret: your-webhook-secret`
+   - Body (JSON):
+     ```json
+     {
+       "secret": "your-webhook-secret",
+       "surrogate_keys": ["post-{post_id}", "wordpress-posts"]
+     }
+     ```
+
+### Security
+
+WordPress content is sanitized using DOMPurify to prevent XSS attacks. Only safe HTML tags and attributes are allowed in rendered content.
+
+### Testing Revalidation
+
+Manual cache invalidation:
+```bash
+curl -X POST http://localhost:3000/api/revalidate \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"your-secret","surrogate_keys":["wordpress-posts"]}'
+```
+
+Or via GET:
+```bash
+curl "http://localhost:3000/api/revalidate?tag=wordpress-posts&secret=your-secret"
+```
+
 ## Related Repositories
 
 - **Cache Handler Package**: [`nextjs-cache-handler`](https://github.com/pantheon-systems/nextjs-cache-handler)
