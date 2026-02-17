@@ -24,10 +24,11 @@ function getGlobalFallbackTags(): string[] {
 export function createUnifiedSurrogateKeyMiddleware(options: {
   debug?: boolean;
   fallbackKey?: string;
+  delayMs?: number; // Delay before checking for tags
 } = {}) {
-  const { debug = false, fallbackKey = 'nextjs-app' } = options;
+  const { debug = false, fallbackKey = 'nextjs-app', delayMs = 100 } = options;
 
-  return function middleware(request: NextRequest): NextResponse {
+  return async function middleware(request: NextRequest): Promise<NextResponse> {
     const { pathname } = request.nextUrl;
 
     if (debug) {
@@ -35,6 +36,14 @@ export function createUnifiedSurrogateKeyMiddleware(options: {
     }
 
     const response = NextResponse.next();
+
+    if (debug) {
+      console.log(`[SurrogateKey] Waiting ${delayMs}ms for tags to be captured...`);
+    }
+
+    // EXPERIMENTAL: Wait for page rendering to start and tags to be captured
+    // WARNING: This is a race condition - may not work reliably
+    await new Promise(resolve => setTimeout(resolve, delayMs));
 
     // Collect tags from globalThis (written by use-cache handlers)
     const capturedTags = getGlobalFallbackTags();
@@ -49,7 +58,7 @@ export function createUnifiedSurrogateKeyMiddleware(options: {
     const allTags = [...new Set([...existingTags, ...capturedTags])];
 
     if (debug) {
-      console.log(`[SurrogateKey] Tags from globalThis: ${capturedTags.length}`);
+      console.log(`[SurrogateKey] Tags from globalThis after delay: ${capturedTags.length}`);
       console.log(`[SurrogateKey] Total unique tags: ${allTags.length}`);
       if (capturedTags.length > 0) {
         console.log(`[SurrogateKey] Tags: ${capturedTags.join(', ')}`);

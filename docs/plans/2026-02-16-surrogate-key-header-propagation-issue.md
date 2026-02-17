@@ -1,8 +1,47 @@
 # Surrogate-Key Header Propagation Issue
 
-**Date:** 2026-02-16
+**Date:** 2026-02-16 (Updated: 2026-02-17)
 **Package:** @pantheon-systems/nextjs-cache-handler v0.2.0
 **Context:** WordPress headless CMS integration with cache tag-based invalidation
+
+## 🚨 CRITICAL UPDATE (2026-02-17): Root Cause Identified
+
+**The issue is a Next.js bug, not an architecture problem.**
+
+Attempted to implement delayed header write pattern (Option 2) to work around middleware timing. **Result: FAILED**
+
+### Root Cause: Next.js Bug #78864
+
+`cacheTag()` values **are never passed to cache handlers** by Next.js 16. This is a confirmed bug:
+
+- **Issue:** https://github.com/vercel/next.js/issues/78864
+- **Status:** OPEN (not fixed as of 2026-02-17)
+- **Symptom:** Cache handler always receives `tags: []` (empty array)
+
+**Evidence from runtime logs:**
+```
+[UseCacheFileHandler] [EMPTY_TAGS_BUG] SET [...]: Next.js passed empty tags array.
+This is a known Next.js bug - cacheTag() values are not propagated to
+cacheHandlers.set(). See: https://github.com/vercel/next.js/issues/78864
+```
+
+### What This Means
+
+**ALL middleware-based approaches are impossible** until Next.js fixes this bug:
+- ❌ Delayed header write with polling (attempted - failed)
+- ❌ AsyncLocalStorage context sharing
+- ❌ Symbol.for global context
+- ❌ Any middleware timing tricks
+
+**The only viable solution is Option 1: Custom Node.js Server** (server.ts) because it can intercept responses after page execution AND it doesn't rely on cache handlers to store tags - it can capture them directly from the execution context.
+
+### Timeline
+- **2025-05-06:** Next.js issue #78864 reported
+- **2026-02-16:** Document created analyzing middleware timing
+- **2026-02-17:** Attempted delayed header write - discovered Next.js bug
+- **Status:** Waiting for Next.js fix OR implement custom server
+
+---
 
 ## Problem Statement
 

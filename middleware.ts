@@ -11,9 +11,11 @@
 import { createUnifiedSurrogateKeyMiddleware } from './lib/surrogate-key-middleware';
 
 // Create unified middleware with debug logging enabled
+// WARNING: Using delayed header write pattern - this is experimental and may not work reliably
 export const middleware = createUnifiedSurrogateKeyMiddleware({
   debug: true,
   fallbackKey: 'nextjs-app',
+  delayMs: 500, // Wait for tags to be captured (race condition!)
 });
 
 // Apply middleware to blog pages and other cached routes
