@@ -39,7 +39,88 @@ cacheHandlers.set(). See: https://github.com/vercel/next.js/issues/78864
 - **2025-05-06:** Next.js issue #78864 reported
 - **2026-02-16:** Document created analyzing middleware timing
 - **2026-02-17:** Attempted delayed header write - discovered Next.js bug
-- **Status:** Waiting for Next.js fix OR implement custom server
+- **2026-02-17 (later):** ✅ **IMPLEMENTED CUSTOM SERVER SOLUTION WITH WORKAROUND**
+
+---
+
+## ✅ SOLUTION IMPLEMENTED (2026-02-17)
+
+Custom Node.js server successfully implemented with workaround for Next.js bug #78864.
+
+### Implementation
+
+**File:** `server.ts` - Custom server wrapping Next.js
+
+**How it works:**
+1. Page renders, WordPress service calls `cacheTag()`
+2. **Workaround:** Service also writes tags directly to `globalThis.__pantheonSurrogateKeyTags`
+3. Custom server intercepts `res.writeHead()` BEFORE headers sent
+4. Reads tags from globalThis
+5. Sets `Surrogate-Key` header
+6. Clears globalThis for next request
+
+**Modified files:**
+- `server.ts` - Custom server with response interception
+- `lib/wordpressService.ts` - Added direct globalThis writes (bypasses Next.js bug)
+- `package.json` - Updated `start` script to use custom server
+
+### Testing Results
+
+✅ **Blog listing page:**
+```bash
+$ curl -I http://localhost:3000/blogs
+Surrogate-Key: post-17 post-list term-3 term-4 term-2 post-16 post-15 post-14 post-13 post-12 post-11 post-9 post-8 post-6
+```
+
+✅ **Individual blog post:**
+```bash
+$ curl -I http://localhost:3000/blogs/the-augmented-human-how-wearable
+Surrogate-Key: post-16 post-list term-3 term-4 term-2
+```
+
+✅ **No tag accumulation across requests**
+✅ **Tags correctly deduplicated**
+✅ **Debug logging confirms tag capture**
+
+### Usage
+
+```bash
+# Start server with debug logging
+SURROGATE_KEY_DEBUG=true npm start
+
+# Production
+npm start
+```
+
+### Why This Works When Middleware Didn't
+
+| Aspect | Middleware | Custom Server |
+|--------|------------|---------------|
+| **Timing** | Runs BEFORE page execution | Intercepts AFTER page execution |
+| **Tag access** | Tags not yet captured | Tags available in globalThis |
+| **Header control** | Response already created | Can modify before writeHead() |
+| **Next.js bug impact** | No tags to read (bug blocks) | Workaround bypasses bug |
+
+### Workaround Details
+
+**The Next.js bug means:**
+- `cacheTag()` values don't reach cache handlers
+- Cache handlers can't populate globalThis
+- Middleware has nothing to capture
+
+**The workaround:**
+```typescript
+// lib/wordpressService.ts
+cacheTag(key); // Still call this (for when Next.js fixes bug)
+
+// ALSO write directly to globalThis (bypass bug)
+(globalThis as any).__pantheonSurrogateKeyTags.push(...tags);
+```
+
+This dual approach means:
+1. When Next.js fixes #78864, cacheTag() will work natively
+2. Until then, custom server reads from our direct globalThis writes
+3. No code changes needed when Next.js is fixed (just remove workaround)
 
 ---
 
