@@ -180,12 +180,16 @@ async function fetchAllWPPosts(): Promise<{ posts: BlogPost[]; surrogateKeys: st
     }
 
     console.log('[WordPress] Successfully fetched posts from API, processing data...');
+    console.log(`[DEBUG] Response headers:`, Array.from(response.headers.entries()));
+    console.log(`[DEBUG] Response status: ${response.status}`);
 
     const wpPosts: WPPost[] = await response.json();
+    console.log(`[DEBUG] Response content:`, wpPosts);
 
     const allKeys = wpPosts.flatMap(post => generateSurrogateKeys(post));
     const uniqueKeys = [...new Set(allKeys)];
 
+    console.log(`[WordPress] Applying ${uniqueKeys.length} unique cache tags for ${wpPosts.length} posts:`, uniqueKeys);
     console.log(`[WordPress] Successfully fetched ${wpPosts.length} posts`);
 
     return { posts: wpPosts.map(transformWordPressPost), surrogateKeys: uniqueKeys };
