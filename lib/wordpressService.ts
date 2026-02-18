@@ -182,6 +182,11 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
       throw new Error(`WordPress API error: ${response.status} ${response.statusText}`);
     }
 
+    console.log('[WordPress] Successfully fetched posts from API, processing data...');
+    console.log(`[DEBUG] Response headers:`, Array.from(response.headers.entries()));
+    console.log(`[DEBUG] Response status: ${response.status}`);
+    console.log(`[DEBUG] Response content: ${await response.text()}`); // Log raw response for debugging
+
     // Generate and apply surrogate keys from all posts
     const wpPosts: WPPost[] = await response.json();
 
