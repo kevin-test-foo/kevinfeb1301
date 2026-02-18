@@ -170,6 +170,7 @@ async function fetchAllWPPosts(): Promise<{ posts: BlogPost[]; surrogateKeys: st
     const url = `${WORDPRESS_API_URL}/posts?_embed&per_page=100&status=publish&orderby=date&order=desc`;
 
     const response = await fetch(url, {
+      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
       },
@@ -210,6 +211,7 @@ async function fetchSingleWPPost(slug: string): Promise<{ post: BlogPost | null;
     const url = `${WORDPRESS_API_URL}/posts?_embed&slug=${encodeURIComponent(slug)}&status=publish`;
 
     const response = await fetch(url, {
+      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
       },
@@ -246,7 +248,7 @@ export async function fetchWordPressPostsWithMetadata(): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
+  cacheLife('short');
 
   const { posts, surrogateKeys } = await fetchAllWPPosts();
 
@@ -265,7 +267,7 @@ export async function fetchWordPressPostWithMetadata(slug: string): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
+  cacheLife('short');
 
   const { post, surrogateKeys } = await fetchSingleWPPost(slug);
 
