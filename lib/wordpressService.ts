@@ -1,4 +1,4 @@
-import { cacheTag } from 'next/cache';
+import { cacheTag, cacheLife } from 'next/cache';
 import DOMPurify from 'isomorphic-dompurify';
 import type { BlogPost } from '../app/blogs/page';
 
@@ -166,6 +166,7 @@ function transformWordPressPost(wpPost: WPPost): BlogPost {
 export async function fetchWordPressPosts(): Promise<BlogPost[]> {
   'use cache';
   //cacheLife('short'); // Uses custom profile: 60s stale, 300s revalidate, 3600s expire
+  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
 
   try {
     console.log('[WordPress] Fetching all posts...');
@@ -212,6 +213,7 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
  */
 export async function fetchWordPressPost(slug: string): Promise<BlogPost | null> {
   'use cache';
+  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
   //cacheLife('short');
 
   try {
@@ -258,8 +260,9 @@ export async function fetchWordPressPostsWithMetadata(): Promise<{
   posts: BlogPost[];
   cachedAt: string;
 }> {
-  // 'use cache';
+  'use cache';
   //cacheLife('short');
+  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
 
   const cachedAt = new Date().toISOString();
   const posts = await fetchWordPressPosts();
@@ -274,8 +277,8 @@ export async function fetchWordPressPostWithMetadata(slug: string): Promise<{
   post: BlogPost | null;
   cachedAt: string;
 }> {
-  // 'use cache';
-  //cacheLife('short');
+  'use cache';
+  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
 
   const cachedAt = new Date().toISOString();
   const post = await fetchWordPressPost(slug);
