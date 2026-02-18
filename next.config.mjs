@@ -31,9 +31,9 @@ const nextConfig = {
     },
     // Blog-style cache (1min stale, 5min revalidate, 1hr expire)
     blog: {
-      stale: 10,
-      revalidate: 30,
-      expire: 360,
+      stale: 60,
+      revalidate: 300,
+      expire: 3600,
     },
   },
 
