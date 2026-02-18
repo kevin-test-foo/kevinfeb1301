@@ -164,7 +164,7 @@ function transformWordPressPost(wpPost: WPPost): BlogPost {
  * Fetch all published posts from WordPress
  */
 export async function fetchWordPressPosts(): Promise<BlogPost[]> {
-  // 'use cache';
+  'use cache';
   //cacheLife('short'); // Uses custom profile: 60s stale, 300s revalidate, 3600s expire
 
   try {
@@ -211,7 +211,7 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
  * Fetch single post by slug from WordPress
  */
 export async function fetchWordPressPost(slug: string): Promise<BlogPost | null> {
-  // 'use cache';
+  'use cache';
   //cacheLife('short');
 
   try {
