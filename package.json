@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "tsx server.ts",
-    "start:next": "next start",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
