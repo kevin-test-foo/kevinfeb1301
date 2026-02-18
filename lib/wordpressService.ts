@@ -194,13 +194,13 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
     // WORKAROUND for Next.js bug #78864:
     // cacheTag() values don't propagate to cache handlers, so we also write
     // directly to globalThis for the custom server to pick up
-    if (typeof globalThis !== 'undefined') {
-      if (!(globalThis as any).__pantheonSurrogateKeyTags) {
-        (globalThis as any).__pantheonSurrogateKeyTags = [];
-      }
-      (globalThis as any).__pantheonSurrogateKeyTags.push(...uniqueKeys);
-      console.log(`[WordPress] Written ${uniqueKeys.length} tags to globalThis for custom server`);
-    }
+    // if (typeof globalThis !== 'undefined') {
+    //   if (!(globalThis as any).__pantheonSurrogateKeyTags) {
+    //     (globalThis as any).__pantheonSurrogateKeyTags = [];
+    //   }
+    //   (globalThis as any).__pantheonSurrogateKeyTags.push(...uniqueKeys);
+    //   console.log(`[WordPress] Written ${uniqueKeys.length} tags to globalThis for custom server`);
+    // }
 
     console.log(`[WordPress] Successfully fetched ${wpPosts.length} posts`);
 
@@ -250,13 +250,13 @@ export async function fetchWordPressPost(slug: string): Promise<BlogPost | null>
     // WORKAROUND for Next.js bug #78864:
     // cacheTag() values don't propagate to cache handlers, so we also write
     // directly to globalThis for the custom server to pick up
-    if (typeof globalThis !== 'undefined') {
-      if (!(globalThis as any).__pantheonSurrogateKeyTags) {
-        (globalThis as any).__pantheonSurrogateKeyTags = [];
-      }
-      (globalThis as any).__pantheonSurrogateKeyTags.push(...surrogateKeys);
-      console.log(`[WordPress] Written ${surrogateKeys.length} tags to globalThis for custom server`);
-    }
+    // if (typeof globalThis !== 'undefined') {
+    //   if (!(globalThis as any).__pantheonSurrogateKeyTags) {
+    //     (globalThis as any).__pantheonSurrogateKeyTags = [];
+    //   }
+    //   (globalThis as any).__pantheonSurrogateKeyTags.push(...surrogateKeys);
+    //   console.log(`[WordPress] Written ${surrogateKeys.length} tags to globalThis for custom server`);
+    // }
 
     console.log(`[WordPress] Successfully fetched post: ${wpPosts[0].id}`);
 
