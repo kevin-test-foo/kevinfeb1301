@@ -23,11 +23,11 @@ const nextConfig = {
 
   // Custom cache life profiles for testing 'use cache' directive
   cacheLife: {
-    // Short-lived cache for testing (30s stale, 60s revalidate, 5min expire)
+    // Short-lived cache for testing (30s stale, 60s revalidate, 1hr expire)
     short: {
       stale: 30,
       revalidate: 60,
-      expire: 300,
+      expire: 3600,
     },
     // Blog-style cache (1min stale, 5min revalidate, 1hr expire)
     blog: {
