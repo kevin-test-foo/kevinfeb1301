@@ -185,10 +185,10 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
     console.log('[WordPress] Successfully fetched posts from API, processing data...');
     console.log(`[DEBUG] Response headers:`, Array.from(response.headers.entries()));
     console.log(`[DEBUG] Response status: ${response.status}`);
-    console.log(`[DEBUG] Response content: ${await response.text()}`); // Log raw response for debugging
 
     // Generate and apply surrogate keys from all posts
     const wpPosts: WPPost[] = await response.json();
+    console.log(`[DEBUG] Response content:`, wpPosts); // Log raw response for debugging
 
     const allKeys = wpPosts.flatMap(post => generateSurrogateKeys(post));
     const uniqueKeys = [...new Set(allKeys)];
