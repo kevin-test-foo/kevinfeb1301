@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { fetchWordPressPost, fetchWordPressPostWithMetadata, fetchWordPressPosts } from '../../../lib/wordpressService';
+import { fetchWordPressPostsWithMetadata, fetchWordPressPostWithMetadata } from '../../../lib/wordpressService';
 import type { BlogPost } from '../page';
 
 interface BlogPostPageProps {
@@ -11,7 +11,7 @@ interface BlogPostPageProps {
 
 export async function generateStaticParams() {
   // Generate static params using WordPress service
-  const blogs = await fetchWordPressPosts();
+  const { posts: blogs } = await fetchWordPressPostsWithMetadata();
   return blogs.map((blog) => ({
     slug: blog.slug,
   }));
@@ -19,7 +19,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const {slug} = await params
-  const blog = await fetchWordPressPost(slug);
+  const { post: blog } = await fetchWordPressPostWithMetadata(slug);
 
   if (!blog) {
     return {

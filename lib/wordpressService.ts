@@ -161,13 +161,9 @@ function transformWordPressPost(wpPost: WPPost): BlogPost {
 }
 
 /**
- * Fetch all published posts from WordPress
+ * Fetch all published posts from WordPress (uncached helper)
  */
-export async function fetchWordPressPosts(): Promise<BlogPost[]> {
-  'use cache';
-  //cacheLife('short'); // Uses custom profile: 60s stale, 300s revalidate, 3600s expire
-  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
-
+async function fetchAllWPPosts(): Promise<{ posts: BlogPost[]; surrogateKeys: string[] }> {
   try {
     console.log('[WordPress] Fetching all posts...');
 
@@ -184,38 +180,26 @@ export async function fetchWordPressPosts(): Promise<BlogPost[]> {
     }
 
     console.log('[WordPress] Successfully fetched posts from API, processing data...');
-    console.log(`[DEBUG] Response headers:`, Array.from(response.headers.entries()));
-    console.log(`[DEBUG] Response status: ${response.status}`);
 
-    // Generate and apply surrogate keys from all posts
     const wpPosts: WPPost[] = await response.json();
-    console.log(`[DEBUG] Response content:`, wpPosts); // Log raw response for debugging
 
     const allKeys = wpPosts.flatMap(post => generateSurrogateKeys(post));
     const uniqueKeys = [...new Set(allKeys)];
 
-    console.log(`[WordPress] Applying ${uniqueKeys.length} unique cache tags for ${wpPosts.length} posts`);
-    uniqueKeys.forEach(key => cacheTag(key));
-
     console.log(`[WordPress] Successfully fetched ${wpPosts.length} posts`);
 
-    return wpPosts.map(transformWordPressPost);
+    return { posts: wpPosts.map(transformWordPressPost), surrogateKeys: uniqueKeys };
 
   } catch (error) {
     console.error('[WordPress] Error fetching posts:', error);
-    // Return empty array - Next.js will serve stale cache if available
-    return [];
+    return { posts: [], surrogateKeys: ['post-list'] };
   }
 }
 
 /**
- * Fetch single post by slug from WordPress
+ * Fetch single post by slug from WordPress (uncached helper)
  */
-export async function fetchWordPressPost(slug: string): Promise<BlogPost | null> {
-  'use cache';
-  cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
-  //cacheLife('short');
-
+async function fetchSingleWPPost(slug: string): Promise<{ post: BlogPost | null; surrogateKeys: string[] }> {
   try {
     console.log(`[WordPress] Fetching post: ${slug}`);
 
@@ -235,21 +219,18 @@ export async function fetchWordPressPost(slug: string): Promise<BlogPost | null>
 
     if (wpPosts.length === 0) {
       console.log(`[WordPress] Post not found: ${slug}`);
-      return null;
+      return { post: null, surrogateKeys: [] };
     }
 
-    // Generate and apply surrogate keys for this post
     const surrogateKeys = generateSurrogateKeys(wpPosts[0]);
-    surrogateKeys.forEach(key => cacheTag(key));
 
     console.log(`[WordPress] Successfully fetched post: ${wpPosts[0].id}`);
 
-    return transformWordPressPost(wpPosts[0]);
+    return { post: transformWordPressPost(wpPosts[0]), surrogateKeys };
 
   } catch (error) {
     console.error(`[WordPress] Error fetching post ${slug}:`, error);
-    // Return null - Next.js will serve stale cache if available
-    return null;
+    return { post: null, surrogateKeys: [] };
   }
 }
 
@@ -261,12 +242,14 @@ export async function fetchWordPressPostsWithMetadata(): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  //cacheLife('short');
   cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
 
-  const cachedAt = new Date().toISOString();
-  const posts = await fetchWordPressPosts();
+  const { posts, surrogateKeys } = await fetchAllWPPosts();
 
+  console.log(`[WordPress] Applying ${surrogateKeys.length} unique cache tags`);
+  surrogateKeys.forEach(key => cacheTag(key));
+
+  const cachedAt = new Date().toISOString();
   return { posts, cachedAt };
 }
 
@@ -280,8 +263,10 @@ export async function fetchWordPressPostWithMetadata(slug: string): Promise<{
   'use cache';
   cacheLife({ stale: Infinity, revalidate: Infinity, expire: Infinity });
 
-  const cachedAt = new Date().toISOString();
-  const post = await fetchWordPressPost(slug);
+  const { post, surrogateKeys } = await fetchSingleWPPost(slug);
 
+  surrogateKeys.forEach(key => cacheTag(key));
+
+  const cachedAt = new Date().toISOString();
   return { post, cachedAt };
 }
