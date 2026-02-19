@@ -253,7 +253,8 @@ export async function fetchWordPressPostsWithMetadata(): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  cacheLife('blog');
+  // TODO: Make it infinite?
+  cacheLife({stale: Infinity, revalidate: Infinity, expire: Infinity});
 
   const { posts, surrogateKeys } = await fetchAllWPPosts();
 
@@ -272,7 +273,7 @@ export async function fetchWordPressPostWithMetadata(slug: string): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  cacheLife('blog');
+  cacheLife({stale: Infinity, revalidate: Infinity, expire: Infinity});
 
   const { post, surrogateKeys } = await fetchSingleWPPost(slug);
 
