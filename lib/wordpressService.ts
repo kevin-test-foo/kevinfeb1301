@@ -87,6 +87,7 @@ function generateSurrogateKeys(wpPost: WPPost): string[] {
 
   // Post-specific key
   keys.push(`post-${wpPost.id}`);
+  keys.push(`post-${wpPost.slug}`);
 
   // Post list key (for invalidating archives)
   keys.push('post-list');
@@ -170,10 +171,12 @@ async function fetchAllWPPosts(): Promise<{ posts: BlogPost[]; surrogateKeys: st
     const url = `${WORDPRESS_API_URL}/posts?_embed&per_page=100&status=publish&orderby=date&order=desc`;
 
     const response = await fetch(url, {
-      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
       },
+      next: {
+        tags: ['post-list'], // Tag for the entire post list
+      }
     });
 
     if (!response.ok) {
@@ -211,10 +214,12 @@ async function fetchSingleWPPost(slug: string): Promise<{ post: BlogPost | null;
     const url = `${WORDPRESS_API_URL}/posts?_embed&slug=${encodeURIComponent(slug)}&status=publish`;
 
     const response = await fetch(url, {
-      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
       },
+      next: {
+        tags: [`post-${slug}`], // Tag for this specific post
+      }
     });
 
     if (!response.ok) {
@@ -248,7 +253,7 @@ export async function fetchWordPressPostsWithMetadata(): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  cacheLife('short');
+  cacheLife('blog');
 
   const { posts, surrogateKeys } = await fetchAllWPPosts();
 
@@ -267,7 +272,7 @@ export async function fetchWordPressPostWithMetadata(slug: string): Promise<{
   cachedAt: string;
 }> {
   'use cache';
-  cacheLife('short');
+  cacheLife('blog');
 
   const { post, surrogateKeys } = await fetchSingleWPPost(slug);
 
