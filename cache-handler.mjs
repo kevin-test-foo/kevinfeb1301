@@ -2,7 +2,7 @@
 import { createCacheHandler } from '@pantheon-systems/nextjs-cache-handler';
 
 const CacheHandler = createCacheHandler({
-  type: 'file', // Use file-based caching for local testing
+  type: 'auto',
 });
 
 export default CacheHandler;
