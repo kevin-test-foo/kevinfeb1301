@@ -2,7 +2,7 @@
 import { createCacheHandler } from '@pantheon-systems/nextjs-cache-handler';
 
 const CacheHandler = createCacheHandler({
-  type: 'auto', // Auto-detect: GCS if CACHE_BUCKET is set, otherwise file-based
+  type: 'file', // Use file-based caching for local testing
 });
 
 export default CacheHandler;
