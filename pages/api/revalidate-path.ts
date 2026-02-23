@@ -1,4 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { revalidatePath } from 'next/cache';
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const path = req.query.path as string;
@@ -9,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     console.log(`[RevalidatePath] Revalidating: ${path}`);
-    await res.revalidate(path);
+    revalidatePath(path);
 
     return res.json({
       message: `Path '${path}' revalidated`,
