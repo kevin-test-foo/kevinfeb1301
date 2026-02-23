@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { revalidateTag } from 'next/cache';
+import { createCacheHandler } from '@pantheon-systems/nextjs-cache-handler';
+
+const CacheHandler = createCacheHandler({ type: 'auto' });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const tag = req.query.tag as string;
@@ -10,7 +12,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     console.log(`[RevalidateTag] Revalidating tag: ${tag}`);
-    revalidateTag(tag, 'max');
+    const cacheHandler = new CacheHandler({
+      revalidatedTags: [],
+      _requestHeaders: {},
+    } as any);
+    await cacheHandler.revalidateTag(tag);
 
     return res.json({
       message: `Tag '${tag}' revalidated`,
