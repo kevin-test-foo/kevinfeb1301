@@ -1,6 +1,6 @@
 # Next.js Cache Handler Test App
 
-This is the E2E test application for validating [`@pantheon-systems/nextjs-cache-handler`](https://github.com/pantheon-systems/nextjs-cache-handler) behavior in production environments.
+This is the E2E test application for validating [`@pantheon-systems/nextjs-cache-handler`](https://github.com/pantheon-systems/nextjs-cache-handler) behavior in production environments...
 
 ## Purpose
 
