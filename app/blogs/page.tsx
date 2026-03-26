@@ -33,7 +33,7 @@ export default async function BlogsPage() {
             Blog
           </h1>
           <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Thoughts, tutorials, and insights from WordPress
+            Thoughts, reflections, tutorials, and insights from WordPress
           </p>
 
           {/* ISR indicator - shows when the page was generated */}
