@@ -12,7 +12,7 @@ This application is deployed to Pantheon and used by automated E2E tests to vali
 - ISR timing validation
 - Edge/CDN caching behavior
 
-## Test Suite
+## Test Suite...
 
 The E2E tests for this application are located in the [`nextjs-automation`](https://github.com/pantheon-systems/nextjs-automation) repository at:
 - `tests/playwright-tests/cache-handler/`
